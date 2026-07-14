@@ -1,0 +1,80 @@
+// Prisma schema for Daily Hope.
+// This mirrors the shapes used by src/lib/data.ts (the mock data layer the
+// app ships with). Once DATABASE_URL points at a real Postgres/Supabase
+// database, run `npx prisma migrate dev --name init`, then swap the API
+// routes in src/app/api to use `prisma` (src/lib/prisma.ts) instead of
+// src/lib/data.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TestimonyStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AdminRole {
+  ADMIN
+  EDITOR
+}
+
+model Admin {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String // bcrypt hash
+  role      AdminRole @default(ADMIN)
+  createdAt DateTime  @default(now())
+}
+
+model Encouragement {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  scripture     String
+  scriptureText String?
+  excerpt       String
+  body          String
+  featured      Boolean  @default(false)
+  likes         Int      @default(0)
+  publishedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([publishedAt])
+}
+
+model Testimony {
+  id        String          @id @default(cuid())
+  name      String?
+  email     String?
+  content   String
+  status    TestimonyStatus @default(PENDING)
+  createdAt DateTime        @default(now())
+
+  @@index([status])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SupportSettings {
+  id          String  @id @default("singleton")
+  mpesaName   String  @default("Daily Hope")
+  mpesaTill   String  @default("000000")
+  paypalLink  String?
+  thankYouMsg String  @default("Thank you for helping keep this space online. It truly means a lot.")
+}
